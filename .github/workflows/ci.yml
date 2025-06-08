@@ -36,4 +36,4 @@ jobs:
           context: ./frontend
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/book-review-frontend:latest
-#
+##
