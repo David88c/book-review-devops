@@ -15,6 +15,7 @@ spec:
       containers:
         - name: frontend
           image: david817/book-review-frontend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
 ---
