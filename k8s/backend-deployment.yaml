@@ -31,13 +31,34 @@ spec:
             - name: SPRING_DATASOURCE_PASSWORD
               value: password
           readinessProbe:
-            httpGet: { path: /actuator/health, port: 8080 }
+            httpGet:
+              path: /actuator/health # אם אין Actuator, אפשר להחליף ל: /
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 5
           livenessProbe:
-            httpGet: { path: /actuator/health, port: 8080 }
+            httpGet:
+              path: /actuator/health
+              port: 8080
             initialDelaySeconds: 20
             periodSeconds: 10
           resources:
-            requests: { cpu: "100m", memory: "128Mi" }
-            limits: { cpu: "500m", memory: "512Mi" }
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
