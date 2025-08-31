@@ -1,0 +1,88 @@
+name: CI-CD (build images + bump manifests)
+
+on:
+  push:
+    branches: ["main"]
+    # אופציונלי: תרצה להריץ רק כשקבצי קוד משתנים?
+    # paths:
+    #   - "backend/**"
+    #   - "frontend/**"
+
+permissions:
+  contents: write # מאפשר ל-workflow לעשות commit לקבצים
+
+env:
+  DOCKER_USER: david817 # ⬅️ שנה אם צריך
+
+jobs:
+  build-push-and-bump:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Derive short SHA
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }} # ⬅️ הגדר Secret בריפו
+
+      # --- Build & Push BACKEND ---
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.DOCKER_USER }}/book-review-backend:${{ env.SHORT_SHA }}
+            ${{ env.DOCKER_USER }}/book-review-backend:latest
+
+      # --- Build & Push FRONTEND ---
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.DOCKER_USER }}/book-review-frontend:${{ env.SHORT_SHA }}
+            ${{ env.DOCKER_USER }}/book-review-frontend:latest
+
+      # --- Install yq to edit YAMLs cleanly ---
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
+      # --- Bump image tags in k8s manifests ---
+      - name: Update image tags in k8s manifests
+        run: |
+          yq -i '
+            (.spec.template.spec.containers[] | select(.name == "backend").image) =
+            strenv(DOCKER_USER) + "/book-review-backend:" + strenv(SHORT_SHA)
+          ' k8s/backend.yaml
+
+          yq -i '
+            (.spec.template.spec.containers[] | select(.name == "frontend").image) =
+            strenv(DOCKER_USER) + "/book-review-frontend:" + strenv(SHORT_SHA)
+          ' k8s/frontend.yaml
+
+      # --- Commit & push manifest changes (triggers ArgoCD sync) ---
+      - name: Commit and push changes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No manifest changes to commit."
+          else
+            git add k8s/backend.yaml k8s/frontend.yaml
+            git commit -m "CD: bump images to ${SHORT_SHA}"
+            git push
+          fi

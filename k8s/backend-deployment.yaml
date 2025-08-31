@@ -7,6 +7,11 @@ spec:
   selector:
     matchLabels:
       app: backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   template:
     metadata:
       labels:
@@ -20,20 +25,19 @@ spec:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql:3306/book_review
+              value: jdbc:mysql://mysql:3306/book_review?allowPublicKeyRetrieval=true&useSSL=false
             - name: SPRING_DATASOURCE_USERNAME
               value: user
             - name: SPRING_DATASOURCE_PASSWORD
               value: password
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: backend-service
-spec:
-  selector:
-    app: backend
-  ports:
-    - port: 8080
-      targetPort: 8080
-  type: NodePort
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits: { cpu: "500m", memory: "512Mi" }
