@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: david817/book-review-backend:latest
+          image: david817/book-review-backend:b7eda6e
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -62,3 +62,7 @@ spec:
       port: 8080
       targetPort: 8080
   type: ClusterIP
+  template:
+    spec:
+      containers:
+        - image: david817/book-review-backend:b7eda6e

@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: david817/book-review-frontend:latest
+          image: david817/book-review-frontend:b7eda6e
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -55,3 +55,7 @@ spec:
       port: 80
       targetPort: 3000
   type: NodePort
+  template:
+    spec:
+      containers:
+        - image: david817/book-review-frontend:b7eda6e
