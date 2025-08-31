@@ -65,14 +65,14 @@ jobs:
       - name: Update image tags in k8s manifests
         run: |
           yq -i '
-            (.spec.template.spec.containers[] | select(.name == "backend").image) =
-            strenv(DOCKER_USER) + "/book-review-backend:" + strenv(SHORT_SHA)
-          ' k8s/backend.yaml
+            .spec.template.spec.containers[0].image =
+            env(DOCKER_USER) + "/book-review-backend:" + env(SHORT_SHA)
+          ' k8s/backend-deployment.yaml
 
           yq -i '
-            (.spec.template.spec.containers[] | select(.name == "frontend").image) =
-            strenv(DOCKER_USER) + "/book-review-frontend:" + strenv(SHORT_SHA)
-          ' k8s/frontend.yaml
+            .spec.template.spec.containers[0].image =
+            env(DOCKER_USER) + "/book-review-frontend:" + env(SHORT_SHA)
+          ' k8s/frontend-deployment.yaml
 
       # --- Commit & push manifest changes (triggers ArgoCD sync) ---
       - name: Commit and push changes
