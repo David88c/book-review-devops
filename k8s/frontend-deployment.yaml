@@ -4,31 +4,26 @@ metadata:
   name: frontend
 spec:
   replicas: 3
-  selector: { matchLabels: { app: frontend } }
+  selector:
+    matchLabels: { app: frontend }
   strategy:
     type: RollingUpdate
     rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
   template:
-    metadata: { labels: { app: frontend } }
+    metadata:
+      labels: { app: frontend }
     spec:
-    containers:
-      - name: frontend
-        image: david817/book-review-frontend:latest
-        imagePullPolicy: Always
-        ports:
-          - containerPort: 80
-        readinessProbe:
-          httpGet: { path: "/", port: 80 }
-          initialDelaySeconds: 10
-          periodSeconds: 5
-        livenessProbe:
-          httpGet: { path: "/", port: 80 }
-          initialDelaySeconds: 20
-          periodSeconds: 10
+      containers:
+        - name: frontend
+          image: david817/book-review-frontend:latest
+          imagePullPolicy: Always
+          ports: [{ containerPort: 80 }]
+          readinessProbe:
+            httpGet: { path: "/", port: 80 }
+            initialDelaySeconds: 10
+            periodSeconds: 5
           livenessProbe:
-            httpGet:
-              path: /
-              port: 80
+            httpGet: { path: "/", port: 80 }
             initialDelaySeconds: 20
             periodSeconds: 10
           resources:
@@ -41,9 +36,8 @@ metadata:
   name: frontend-service
 spec:
   selector: { app: frontend }
-  ports: [{ name: http, port: 80, targetPort: 3000 }]
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80 # <<< שים לב: 80 (תאם ל-Nginx)
   type: NodePort
-  template:
-    spec:
-      containers:
-        - image: david817/book-review-frontend:1100cac

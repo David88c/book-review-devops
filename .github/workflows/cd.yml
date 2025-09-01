@@ -62,16 +62,24 @@ jobs:
           yq --version
 
       # --- Bump image tags in k8s manifests ---
-      - name: Update image tags in k8s manifests
+      - name: Bump backend image tag
         run: |
           yq -i '
-            .spec.template.spec.containers[0].image =
-            env(DOCKER_USER) + "/book-review-backend:" + env(SHORT_SHA)
+            if .kind == "Deployment" and .metadata.name == "backend"
+            then .spec.template.spec.containers[0].image =
+                env(DOCKER_USER) + "/book-review-backend:" + env(SHORT_SHA)
+            else .
+            end
           ' k8s/backend-deployment.yaml
 
+      - name: Bump frontend image tag
+        run: |
           yq -i '
-            .spec.template.spec.containers[0].image =
-            env(DOCKER_USER) + "/book-review-frontend:" + env(SHORT_SHA)
+            if .kind == "Deployment" and .metadata.name == "frontend"
+            then .spec.template.spec.containers[0].image =
+                env(DOCKER_USER) + "/book-review-frontend:" + env(SHORT_SHA)
+            else .
+            end
           ' k8s/frontend-deployment.yaml
 
       # --- Commit & push manifest changes (triggers ArgoCD sync) ---
