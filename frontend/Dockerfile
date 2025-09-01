@@ -1,14 +1,13 @@
-FROM node:lts AS development
+# build stage
+FROM node:18 AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
 
-WORKDIR /code
-COPY package.json /code/package.json
-COPY package-lock.json /code/package-lock.json
-
-RUN npm ci
-
-COPY . /code
-
-ENV CI=true
-ENV PORT=3000
-
-ENTRYPOINT [ "npm", "start" ]
+# serve stage
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
