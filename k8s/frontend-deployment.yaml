@@ -11,18 +11,20 @@ spec:
   template:
     metadata: { labels: { app: frontend } }
     spec:
-      containers:
-        - name: frontend
-          image: david817/book-review-frontend:1100cac
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 80
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 5
+    containers:
+      - name: frontend
+        image: david817/book-review-frontend:latest
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 80
+        readinessProbe:
+          httpGet: { path: "/", port: 80 }
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          httpGet: { path: "/", port: 80 }
+          initialDelaySeconds: 20
+          periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /
