@@ -79,10 +79,12 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet; then
+
+          git add k8s/backend-deployment.yaml k8s/frontend-deployment.yaml
+
+          if git diff --cached --quiet; then
             echo "No manifest changes to commit."
           else
-            git add k8s/backend.yaml k8s/frontend.yaml
             git commit -m "CD: bump images to ${SHORT_SHA}"
-            git push
+            git push origin HEAD:${GITHUB_REF##*/}
           fi
