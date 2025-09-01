@@ -4,54 +4,35 @@ metadata:
   name: frontend
 spec:
   replicas: 3
-  selector:
-    matchLabels:
-      app: frontend
+  selector: { matchLabels: { app: frontend } }
   strategy:
     type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
   template:
-    metadata:
-      labels:
-        app: frontend
+    metadata: { labels: { app: frontend } }
     spec:
       containers:
         - name: frontend
           image: david817/book-review-frontend:latest
           imagePullPolicy: Always
-          ports:
-            - containerPort: 3000
+          ports: [{ containerPort: 3000 }]
           readinessProbe:
-            httpGet:
-              path: /
-              port: 3000
+            httpGet: { path: "/", port: 3000 }
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
-            httpGet:
-              path: /
-              port: 3000
+            httpGet: { path: "/", port: 3000 }
             initialDelaySeconds: 10
             periodSeconds: 10
           resources:
-            requests:
-              cpu: "50m"
-              memory: "64Mi"
-            limits:
-              cpu: "300m"
-              memory: "256Mi"
+            requests: { cpu: "50m", memory: "64Mi" }
+            limits: { cpu: "300m", memory: "256Mi" }
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend-service
 spec:
-  selector:
-    app: frontend
-  ports:
-    - name: http
-      port: 80
-      targetPort: 3000
+  selector: { app: frontend }
+  ports: [{ name: http, port: 80, targetPort: 3000 }]
   type: NodePort

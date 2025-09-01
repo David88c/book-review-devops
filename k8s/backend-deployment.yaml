@@ -4,61 +4,42 @@ metadata:
   name: backend
 spec:
   replicas: 3
-  selector:
-    matchLabels:
-      app: backend
+  selector: { matchLabels: { app: backend } }
   strategy:
     type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
   template:
-    metadata:
-      labels:
-        app: backend
+    metadata: { labels: { app: backend } }
     spec:
       containers:
         - name: backend
           image: david817/book-review-backend:latest
           imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
+          ports: [{ containerPort: 8080 }]
           env:
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://mysql:3306/book_review?allowPublicKeyRetrieval=true&useSSL=false
-            - name: SPRING_DATASOURCE_USERNAME
-              value: user
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: password
+            - {
+                name: SPRING_DATASOURCE_URL,
+                value: jdbc:mysql://mysql:3306/book_review?allowPublicKeyRetrieval=true&useSSL=false,
+              }
+            - { name: SPRING_DATASOURCE_USERNAME, value: user }
+            - { name: SPRING_DATASOURCE_PASSWORD, value: password }
           readinessProbe:
-            httpGet:
-              path: /actuator/health # אם אין Actuator, אפשר להחליף ל: /
-              port: 8080
+            httpGet: { path: /actuator/health, port: 8080 }
             initialDelaySeconds: 10
             periodSeconds: 5
           livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
+            httpGet: { path: /actuator/health, port: 8080 }
             initialDelaySeconds: 20
             periodSeconds: 10
           resources:
-            requests:
-              cpu: "100m"
-              memory: "128Mi"
-            limits:
-              cpu: "500m"
-              memory: "512Mi"
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits: { cpu: "500m", memory: "512Mi" }
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
 spec:
-  selector:
-    app: backend
-  ports:
-    - name: http
-      port: 8080
-      targetPort: 8080
+  selector: { app: backend }
+  ports: [{ name: http, port: 8080, targetPort: 8080 }]
   type: ClusterIP

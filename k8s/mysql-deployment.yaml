@@ -4,57 +4,25 @@ metadata:
   name: mysql
 spec:
   replicas: 1
-  selector:
-    matchLabels:
-      app: mysql
+  selector: { matchLabels: { app: mysql } }
   template:
-    metadata:
-      labels:
-        app: mysql
+    metadata: { labels: { app: mysql } }
     spec:
       containers:
         - name: mysql
           image: mysql:8
-          ports:
-            - containerPort: 3306
+          ports: [{ containerPort: 3306 }]
           env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: root
-            - name: MYSQL_DATABASE
-              value: book_review
-            - name: MYSQL_USER
-              value: user
-            - name: MYSQL_PASSWORD
-              value: password
-          readinessProbe:
-            exec:
-              command:
-                [
-                  "bash",
-                  "-lc",
-                  "mysqladmin ping -u$$MYSQL_USER -p$$MYSQL_PASSWORD",
-                ]
-            initialDelaySeconds: 10
-            periodSeconds: 5
-          livenessProbe:
-            exec:
-              command:
-                [
-                  "bash",
-                  "-lc",
-                  "mysqladmin ping -u$$MYSQL_USER -p$$MYSQL_PASSWORD",
-                ]
-            initialDelaySeconds: 20
-            periodSeconds: 10
+            - { name: MYSQL_ROOT_PASSWORD, value: root }
+            - { name: MYSQL_DATABASE, value: book_review }
+            - { name: MYSQL_USER, value: user }
+            - { name: MYSQL_PASSWORD, value: password }
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: mysql
 spec:
-  selector:
-    app: mysql
-  ports:
-    - port: 3306
-      targetPort: 3306
+  selector: { app: mysql }
+  ports: [{ port: 3306, targetPort: 3306 }]
   clusterIP: None
