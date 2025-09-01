@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: david817/book-review-frontend:latest
+          image: david817/book-review-frontend:1100cac
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -41,3 +41,7 @@ spec:
   selector: { app: frontend }
   ports: [{ name: http, port: 80, targetPort: 3000 }]
   type: NodePort
+  template:
+    spec:
+      containers:
+        - image: david817/book-review-frontend:1100cac
