@@ -1,5 +1,4 @@
-CREATE TABLE IF NOT EXISTS example.greetings (
-    id INTEGER AUTO_INCREMENT,
-    name varchar(50) NOT NULL,
-    PRIMARY KEY (id)
+CREATE TABLE IF NOT EXISTS greetings (
+  id   INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL
 );
