@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: backend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels: { app: backend }
   strategy:
@@ -37,21 +37,18 @@ spec:
             - { name: SPRING_DATASOURCE_USERNAME, value: "user" }
             - { name: SPRING_DATASOURCE_PASSWORD, value: "password" }
 
-          # זמן עלייה נדיב לפני שבודקים בריאות
           startupProbe:
-            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            httpGet: { path: /actuator/health, port: 8080 }
             periodSeconds: 5
             failureThreshold: 24 # ~120s
 
-          # לייבנס - לא מפיל על DB
           livenessProbe:
-            httpGet: { path: /actuator/health/liveness, port: 8080 }
+            httpGet: { path: /actuator/health, port: 8080 }
             initialDelaySeconds: 30
             periodSeconds: 10
 
-          # רדינס - כן בודק DB
           readinessProbe:
-            httpGet: { path: /actuator/health/readiness, port: 8080 }
+            httpGet: { path: /actuator/health, port: 8080 }
             initialDelaySeconds: 15
             periodSeconds: 10
 
