@@ -13,7 +13,7 @@ spec:
     metadata:
       labels: { app: backend }
     spec:
-      # המתנה שה-MySQL יאזין על 3306 (מונע ריסטרטים מיותרים)
+      # מחכים ל-MySQL לפני שהאפליקציה תתחיל
       initContainers:
         - name: wait-for-mysql
           image: busybox:1.36
@@ -37,19 +37,19 @@ spec:
             - { name: SPRING_DATASOURCE_USERNAME, value: "user" }
             - { name: SPRING_DATASOURCE_PASSWORD, value: "password" }
 
-          # זמן סטארט-אפ נדיב לפני ששופטים את הקונטיינר
+          # זמן עלייה נדיב לפני שבודקים בריאות
           startupProbe:
             httpGet: { path: /actuator/health/liveness, port: 8080 }
             periodSeconds: 5
             failureThreshold: 24 # ~120s
 
-          # לייבנס לא בודק DB (שומר על יציבות)
+          # לייבנס - לא מפיל על DB
           livenessProbe:
             httpGet: { path: /actuator/health/liveness, port: 8080 }
             initialDelaySeconds: 30
             periodSeconds: 10
 
-          # רדינס כן בודק DB
+          # רדינס - כן בודק DB
           readinessProbe:
             httpGet: { path: /actuator/health/readiness, port: 8080 }
             initialDelaySeconds: 15
