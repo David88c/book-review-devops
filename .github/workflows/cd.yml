@@ -68,14 +68,18 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USER || 'david817' }}
           SHORT_SHA: ${{ steps.short-sha.outputs.sha }}
         run: |
-          yq e -i 'if .kind=="Deployment" and .metadata.name=="backend" then .spec.template.spec.containers[0].image = strenv(DOCKER_USER)+"/book-review-backend:"+strenv(SHORT_SHA) else . end' k8s/backend-deployment.yaml
+          yq e -i '(.spec.template.spec.containers[].image) |=
+                  (strenv(DOCKER_USER)+"/book-review-backend:"+strenv(SHORT_SHA))' \
+                  k8s/backend-deployment.yaml
 
       - name: Bump frontend image tag
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER || 'david817' }}
           SHORT_SHA: ${{ steps.short-sha.outputs.sha }}
         run: |
-          yq e -i 'if .kind=="Deployment" and .metadata.name=="frontend" then .spec.template.spec.containers[0].image = strenv(DOCKER_USER)+"/book-review-frontend:"+strenv(SHORT_SHA) else . end' k8s/frontend-deployment.yaml
+          yq e -i '(.spec.template.spec.containers[].image) |=
+                  (strenv(DOCKER_USER)+"/book-review-frontend:"+strenv(SHORT_SHA))' \
+                  k8s/frontend-deployment.yaml
 
       # --- Commit & push manifest changes (triggers ArgoCD sync) ---
       - name: Commit and push changes
