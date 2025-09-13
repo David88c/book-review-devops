@@ -20,7 +20,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         {greeting ? (
-          <p>David Cohen!!! {greeting.name}</p>
+          <p>David Cohen 36 {greeting.name}</p>
         ) : (
           <p>Loading...</p>
         )}
