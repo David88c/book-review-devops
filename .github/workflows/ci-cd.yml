@@ -1,0 +1,88 @@
+# .github/workflows/ci-cd.yml
+name: CI + CD (Minikube via Argo CD)
+
+on:
+  push:
+    branches: ["main"]
+    # חשוב כדי שלא יהיה לופ: עדכון בקבצי k8s לא יפעיל ריצה נוספת
+    paths-ignore:
+      - "k8s/**"
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # נדרש כדי לבצע commit לקבצי k8s
+  packages: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Short SHA
+        id: meta
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ל-PRs אנחנו רק בונים (בלי push). ב-push ל-main נבצע login+push.
+      - name: Docker Hub Login
+        if: ${{ github.event_name == 'push' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: ${{ github.event_name == 'push' }}
+          platforms: linux/amd64
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/book-review-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/book-review-backend:${{ steps.meta.outputs.SHORT_SHA }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: ${{ github.event_name == 'push' }}
+          platforms: linux/amd64
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/book-review-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/book-review-frontend:${{ steps.meta.outputs.SHORT_SHA }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # עדכון תגי האימג'ים ב-kustomization.yaml (CD)
+      - name: Install yq
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Bump image tags in k8s/minikube/kustomization.yaml
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          cd k8s/minikube
+          yq -i '.images[] |= (select(.name=="docker.io/'"${{ secrets.DOCKERHUB_USERNAME }}"'/book-review-backend").newTag="'${{ steps.meta.outputs.SHORT_SHA }}'")' kustomization.yaml
+          yq -i '.images[] |= (select(.name=="docker.io/'"${{ secrets.DOCKERHUB_USERNAME }}"'/book-review-frontend").newTag="'${{ steps.meta.outputs.SHORT_SHA }}'")' kustomization.yaml
+
+      - name: Commit & push k8s tag bump
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "ci@github"
+          git add k8s/minikube/kustomization.yaml
+          git commit -m "ci: bump images to ${{ steps.meta.outputs.SHORT_SHA }} [skip ci]"
+          git push
