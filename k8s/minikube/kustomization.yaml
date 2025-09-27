@@ -7,6 +7,6 @@ resources:
   - minikube-manifests.yaml
 images:
   - name: docker.io/david817/book-review-backend
-    newTag: 0b3b021
+    newTag: 40e1346
   - name: docker.io/david817/book-review-frontend
-    newTag: 0b3b021
+    newTag: 40e1346
