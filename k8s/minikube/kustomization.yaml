@@ -12,9 +12,8 @@ resources:
   - frontend-svc.yaml
   - frontend-deploy.yaml
   - ingress.yaml
-
 images:
   - name: docker.io/david817/book-review-backend
-    newTag: latest
+    newTag: 0b3b021
   - name: docker.io/david817/book-review-frontend
-    newTag: latest
+    newTag: 0b3b021
